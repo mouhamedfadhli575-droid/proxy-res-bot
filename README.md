@@ -1,4 +1,4 @@
-# PROXY RES Bot
+# PROXY RES Bot 
 
 A Telegram bot for proxy management with user authentication, recharge options, and proxy services.
 
