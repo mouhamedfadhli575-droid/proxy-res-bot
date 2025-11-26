@@ -921,6 +921,7 @@ async def handle_order_decision(update: Update, context: ContextTypes.DEFAULT_TY
     if decision == "accept":
         order['status'] = 'accepted'
         order['accepted_at'] = datetime.now().isoformat()
+        admin_id = query.from_user.id
         
         # Notify user
         try:
@@ -931,14 +932,22 @@ async def handle_order_decision(update: Update, context: ContextTypes.DEFAULT_TY
         except:
             pass
         
-        await query.answer("✅ Order accepted! Now send proxy details.", show_alert=True)
+        # Send private message to admin to request proxy details
+        try:
+            await context.bot.send_message(
+                chat_id=admin_id,
+                text=f"📤 Send Proxy Details for Order {order_id}\n\nPlease send the proxy details (IP:Port:User:Pass or any format):\n\nExample:\nHost: proxy.example.com\nPort: 8080\nUsername: user123\nPassword: pass123\nProtocol: HTTP/HTTPS/SOCKS5\n\nThe message will be forwarded to the customer.\n\nSend /cancel to cancel."
+            )
+            # Store order_id in context for this admin
+            context.user_data['sending_proxy_for_order'] = order_id
+        except Exception as e:
+            logger.error(f"Failed to send private message to admin: {e}")
+        
+        await query.answer("✅ Order accepted! Check your private chat with the bot.", show_alert=True)
         
         # Update channel message
         await query.edit_message_text(
-            text=f"{query.message.text}\n\n✅ ACCEPTED",
-            reply_markup=InlineKeyboardMarkup([[
-                InlineKeyboardButton("📤 Send Proxy Details", callback_data=f"send_proxy_{order_id}")
-            ]])
+            text=f"{query.message.text}\n\n✅ ACCEPTED\n\n⏳ Waiting for proxy details..."
         )
     
     elif decision == "reject":
@@ -991,6 +1000,7 @@ async def receive_proxy_details(update: Update, context: ContextTypes.DEFAULT_TY
     
     order = pending_orders[order_id]
     user_id = order['user_id']
+    admin_id = update.effective_user.id
     proxy_details = update.message.text
     
     # Send to customer
@@ -1032,16 +1042,32 @@ Need help? Contact @{bot_config['support_username']}
             f"✅ Proxy details sent successfully to customer!\n\nOrder {order_id} is now completed."
         )
         
-        # Update channel message
+         # Update channel message
         if ORDERS_CHANNEL_ID and 'channel_message_id' in order:
             try:
+                # Get original channel message text
+                channel_msg = await context.bot.forward_message(
+                    chat_id=admin_id,
+                    from_chat_id=ORDERS_CHANNEL_ID,
+                    message_id=order['channel_message_id']
+                )
+                original_text = channel_msg.text or ""
+                
+                # Update with completed status
+                base_text = original_text.split('✅ ACCEPTED')[0]
                 await context.bot.edit_message_text(
                     chat_id=ORDERS_CHANNEL_ID,
                     message_id=order['channel_message_id'],
-                    text=f"{update.message.reply_to_message.text if update.message.reply_to_message else ''}\n\n✅ COMPLETED"
+                    text=f"{base_text}✅ ACCEPTED\n\n✅ COMPLETED - Proxy Delivered"
                 )
-            except:
-                pass
+                
+                # Delete forwarded message
+                await context.bot.delete_message(
+                    chat_id=admin_id,
+                    message_id=channel_msg.message_id
+                )
+            except Exception as e:
+                logger.error(f"Failed to update channel message: {e}")
         
     except Exception as e:
         logger.error(f"Failed to send proxy details: {e}")
