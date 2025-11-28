@@ -1,1 +1,1 @@
-worker: python3 bot.py
+worker: python shopify_bot_pro.py
