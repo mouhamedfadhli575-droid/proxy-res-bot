@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة التحكم - Shopify Checker Bot</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .sidebar {
+            background: #2d3748;
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+        .sidebar a {
+            color: #cbd5e0;
+            text-decoration: none;
+            padding: 15px 25px;
+            display: block;
+            transition: all 0.3s;
+        }
+        .sidebar a:hover, .sidebar a.active {
+            background: #4a5568;
+            color: #fff;
+            border-right: 4px solid #667eea;
+        }
+        .main-content {
+            padding: 30px;
+        }
+        .stat-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 12px rgba(0,0,0,0.15);
+        }
+        .stat-icon {
+            font-size: 3rem;
+            opacity: 0.7;
+        }
+        .navbar-custom {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 15px 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-2 sidebar">
+                <div class="text-center mb-4">
+                    <h4 class="text-white">🤖 Admin Panel</h4>
+                </div>
+                <a href="/" class="active"><i class="fas fa-home"></i> لوحة التحكم</a>
+                <a href="/users"><i class="fas fa-users"></i> المستخدمين</a>
+                <a href="/proxies"><i class="fas fa-network-wired"></i> البروكسيات</a>
+                <a href="/statistics"><i class="fas fa-chart-line"></i> الإحصائيات</a>
+                <a href="/settings"><i class="fas fa-cog"></i> الإعدادات</a>
+                <hr style="border-color: #4a5568;">
+                <a href="/logout"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</a>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="col-md-10 main-content">
+                <!-- Navbar -->
+                <div class="navbar-custom">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h3 class="mb-0">لوحة التحكم الرئيسية</h3>
+                        <div>
+                            <span class="badge bg-success">Online</span>
+                            <span class="ms-2">مرحباً، Admin</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Statistics Cards -->
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted">إجمالي المستخدمين</h6>
+                                    <h2 class="mb-0">{{ total_users }}</h2>
+                                </div>
+                                <div class="stat-icon text-primary">
+                                    <i class="fas fa-users"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted">الاشتراكات النشطة</h6>
+                                    <h2 class="mb-0">{{ active_subscriptions }}</h2>
+                                </div>
+                                <div class="stat-icon text-success">
+                                    <i class="fas fa-check-circle"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted">إجمالي الفحوصات</h6>
+                                    <h2 class="mb-0">{{ total_checks }}</h2>
+                                </div>
+                                <div class="stat-icon text-info">
+                                    <i class="fas fa-credit-card"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-3">
+                        <div class="stat-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-muted">معدل النجاح</h6>
+                                    <h2 class="mb-0">{{ "%.1f"|format(success_rate) }}%</h2>
+                                </div>
+                                <div class="stat-icon text-warning">
+                                    <i class="fas fa-chart-line"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Additional Info -->
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="stat-card">
+                            <h5><i class="fas fa-network-wired text-primary"></i> حالة البروكسيات</h5>
+                            <hr>
+                            <div class="d-flex justify-content-between">
+                                <span>البروكسيات النشطة:</span>
+                                <strong class="text-success">{{ active_proxies }}</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mt-2">
+                                <span>إجمالي البروكسيات:</span>
+                                <strong>{{ total_proxies }}</strong>
+                            </div>
+                            <a href="/proxies" class="btn btn-primary btn-sm mt-3">إدارة البروكسيات</a>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="stat-card">
+                            <h5><i class="fas fa-info-circle text-info"></i> معلومات النظام</h5>
+                            <hr>
+                            <div class="d-flex justify-content-between">
+                                <span>مواقع شوبيفاي:</span>
+                                <strong>15</strong>
+                            </div>
+                            <div class="d-flex justify-content-between mt-2">
+                                <span>حالة البوت:</span>
+                                <strong class="text-success">Online</strong>
+                            </div>
+                            <a href="/settings" class="btn btn-info btn-sm mt-3">الإعدادات</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
