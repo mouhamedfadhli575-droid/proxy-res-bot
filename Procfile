@@ -1,1 +1,2 @@
-worker: python shopify_bot_pro.py
+worker: python bot.py
+web: python web_server.py
