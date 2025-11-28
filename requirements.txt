@@ -3,4 +3,4 @@ requests==2.31.0
 fake-useragent==1.4.0
 colorama==0.4.6
 urllib3==1.26.18
-sqlite3
+flask==2.3.3
