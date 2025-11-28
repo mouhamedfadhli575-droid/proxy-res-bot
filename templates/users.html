@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>إدارة المستخدمين - Admin Panel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .sidebar {
+            background: #2d3748;
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+        .sidebar a {
+            color: #cbd5e0;
+            text-decoration: none;
+            padding: 15px 25px;
+            display: block;
+            transition: all 0.3s;
+        }
+        .sidebar a:hover, .sidebar a.active {
+            background: #4a5568;
+            color: #fff;
+            border-right: 4px solid #667eea;
+        }
+        .main-content {
+            padding: 30px;
+        }
+        .content-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .navbar-custom {
+            background: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 15px 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+        }
+        .badge-subscription {
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-2 sidebar">
+                <div class="text-center mb-4">
+                    <h4 class="text-white">🤖 Admin Panel</h4>
+                </div>
+                <a href="/"><i class="fas fa-home"></i> لوحة التحكم</a>
+                <a href="/users" class="active"><i class="fas fa-users"></i> المستخدمين</a>
+                <a href="/proxies"><i class="fas fa-network-wired"></i> البروكسيات</a>
+                <a href="/statistics"><i class="fas fa-chart-line"></i> الإحصائيات</a>
+                <a href="/settings"><i class="fas fa-cog"></i> الإعدادات</a>
+                <hr style="border-color: #4a5568;">
+                <a href="/logout"><i class="fas fa-sign-out-alt"></i> تسجيل الخروج</a>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="col-md-10 main-content">
+                <!-- Navbar -->
+                <div class="navbar-custom">
+                    <h3 class="mb-0">إدارة المستخدمين</h3>
+                </div>
+                
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                        {% for category, message in messages %}
+                            <div class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show" role="alert">
+                                {{ message }}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+                {% endwith %}
+                
+                <!-- Users Table -->
+                <div class="content-card">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5><i class="fas fa-users text-primary"></i> قائمة المستخدمين ({{ users|length }})</h5>
+                        <input type="text" class="form-control w-25" placeholder="بحث..." id="searchInput">
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover" id="usersTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>ID</th>
+                                    <th>الاسم</th>
+                                    <th>اسم المستخدم</th>
+                                    <th>الاشتراك</th>
+                                    <th>تاريخ الانتهاء</th>
+                                    <th>الحالة</th>
+                                    <th>الإجراءات</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                <tr>
+                                    <td>{{ user.user_id }}</td>
+                                    <td>{{ user.first_name }} {{ user.last_name or '' }}</td>
+                                    <td>@{{ user.username or 'N/A' }}</td>
+                                    <td>
+                                        {% if user.subscription_type == 'free' %}
+                                            <span class="badge bg-secondary">Free</span>
+                                        {% elif user.subscription_type == 'weekly' %}
+                                            <span class="badge bg-info">Weekly</span>
+                                        {% elif user.subscription_type == 'monthly' %}
+                                            <span class="badge bg-primary">Monthly</span>
+                                        {% elif user.subscription_type == 'yearly' %}
+                                            <span class="badge bg-success">Yearly</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ user.subscription_end or 'N/A' }}</td>
+                                    <td>
+                                        {% if user.is_banned %}
+                                            <span class="badge bg-danger">محظور</span>
+                                        {% else %}
+                                            <span class="badge bg-success">نشط</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="/users/edit/{{ user.user_id }}" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        {% if user.is_banned %}
+                                            <a href="/users/unban/{{ user.user_id }}" class="btn btn-sm btn-success">
+                                                <i class="fas fa-unlock"></i>
+                                            </a>
+                                        {% else %}
+                                            <a href="/users/ban/{{ user.user_id }}" class="btn btn-sm btn-danger">
+                                                <i class="fas fa-ban"></i>
+                                            </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Simple search functionality
+        document.getElementById('searchInput').addEventListener('keyup', function() {
+            const searchValue = this.value.toLowerCase();
+            const rows = document.querySelectorAll('#usersTable tbody tr');
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(searchValue) ? '' : 'none';
+            });
+        });
+    </script>
+</body>
+</html>
